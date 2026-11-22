@@ -119,7 +119,7 @@ html{scroll-behavior:smooth}
 
 
 /* 공부자료 직접 필기 */
-.study-materials{position:relative;touch-action:manipulation}
+.study-materials{position:relative}
 .note-toolbar{
   position:sticky;top:8px;z-index:30;display:flex;gap:7px;flex-wrap:wrap;align-items:center;
   margin:10px 0 14px;padding:9px;border:1px solid #dfe3e8;border-radius:12px;
@@ -152,7 +152,7 @@ html{scroll-behavior:smooth}
   position:absolute;left:0;top:0;width:100%;height:100%;z-index:20;
   pointer-events:none;border-radius:20px
 }
-.study-materials.annotating{cursor:crosshair}
+.study-materials.annotating{cursor:crosshair;touch-action:none;overscroll-behavior:contain}
 .study-materials.annotating *{-webkit-tap-highlight-color:transparent}
 @media(max-width:700px){
   .note-toolbar .note-hint{width:100%;margin-left:0}
@@ -1224,7 +1224,8 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   if(!section||!canvas||!toolbar||!toggle||!penBtn||!highlighterBtn||!eraserBtn||!clearBtn||!opacityInput||!opacityValue) return;
 
   const storageKey='danbi-study-1122-drawing-v1';
-  const prefsKey='danbi-study-1122-drawing-prefs-v4';
+  const prefsKey='danbi-study-1122-drawing-prefs-v5';
+
   let enabled=false;
   let tool='pen';
   let color='#e14d68';
@@ -1234,6 +1235,11 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   let lastPoint=null;
   let ctx;
   let dpr=Math.max(1,window.devicePixelRatio||1);
+
+  // finger scrolling / double tap
+  let fingerGesture=null;
+  let lastTap=null;
+  let lastBackAt=0;
 
   try{
     const prefs=JSON.parse(localStorage.getItem(prefsKey)||'{}');
@@ -1268,6 +1274,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     canvas.height=Math.round(h*dpr);
     canvas.style.width=w+'px';
     canvas.style.height=h+'px';
+
     ctx=canvas.getContext('2d');
     ctx.scale(dpr,dpr);
     ctx.lineCap='round';
@@ -1295,6 +1302,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       drawing=false;
       activePointerId=null;
       lastPoint=null;
+      fingerGesture=null;
     }
   }
 
@@ -1347,6 +1355,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       ctx.strokeStyle=color;
       ctx.lineWidth=3.5;
     }
+
     ctx.stroke();
     ctx.closePath();
   }
@@ -1355,8 +1364,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     return !!target.closest('#study-note-toolbar');
   }
 
-  // 핵심: 캔버스는 터치를 받지 않는다.
-  // 공부자료 영역에서 Apple Pencil(pointerType=pen)만 캡처해서 그림.
+  // Apple Pencil only: preventDefault here blocks Safari page movement while writing.
   section.addEventListener('pointerdown',e=>{
     if(!enabled || e.pointerType!=='pen' || isToolbarTarget(e.target)) return;
     drawing=true;
@@ -1392,6 +1400,121 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   section.addEventListener('pointerup',stopPen,{capture:true,passive:false});
   section.addEventListener('pointercancel',stopPen,{capture:true,passive:false});
 
+  // Finger scroll while annotation is ON.
+  // Native scrolling is disabled in the study area, so Pencil never drags the page.
+  // One finger or two fingers both scroll; controls in toolbar keep their native behavior.
+  function touchCenter(touches){
+    if(!touches || touches.length===0) return null;
+    let x=0,y=0;
+    for(const t of touches){ x+=t.clientX; y+=t.clientY; }
+    return {x:x/touches.length,y:y/touches.length};
+  }
+
+  section.addEventListener('touchstart',e=>{
+    if(!enabled || isToolbarTarget(e.target)) return;
+    const c=touchCenter(e.touches);
+    if(!c) return;
+
+    fingerGesture={
+      startX:c.x,
+      startY:c.y,
+      lastX:c.x,
+      lastY:c.y,
+      startTime:Date.now(),
+      moved:false,
+      maxTouches:e.touches.length
+    };
+
+    e.preventDefault();
+  },{capture:true,passive:false});
+
+  section.addEventListener('touchmove',e=>{
+    if(!enabled || !fingerGesture || isToolbarTarget(e.target)) return;
+    const c=touchCenter(e.touches);
+    if(!c) return;
+
+    const dx=c.x-fingerGesture.lastX;
+    const dy=c.y-fingerGesture.lastY;
+
+    if(Math.hypot(c.x-fingerGesture.startX,c.y-fingerGesture.startY)>8){
+      fingerGesture.moved=true;
+    }
+    fingerGesture.maxTouches=Math.max(fingerGesture.maxTouches,e.touches.length);
+
+    window.scrollBy(-dx,-dy);
+
+    fingerGesture.lastX=c.x;
+    fingerGesture.lastY=c.y;
+
+    e.preventDefault();
+  },{capture:true,passive:false});
+
+  function goBack(){
+    const now=Date.now();
+    if(now-lastBackAt<800) return;
+    lastBackAt=now;
+
+    if(history.length>1){
+      history.back();
+    }else if(location.hash){
+      history.replaceState(null,'',location.pathname+location.search);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  }
+
+  section.addEventListener('touchend',e=>{
+    if(!enabled || !fingerGesture || isToolbarTarget(e.target)) return;
+
+    const ended=e.touches.length===0;
+    if(!ended){
+      const c=touchCenter(e.touches);
+      if(c){
+        fingerGesture.lastX=c.x;
+        fingerGesture.lastY=c.y;
+      }
+      e.preventDefault();
+      return;
+    }
+
+    const t=e.changedTouches[0];
+    const now=Date.now();
+    const isTap=
+      !fingerGesture.moved &&
+      fingerGesture.maxTouches===1 &&
+      now-fingerGesture.startTime<350;
+
+    if(isTap && t){
+      const tap={x:t.clientX,y:t.clientY,time:now};
+      if(lastTap &&
+         now-lastTap.time<=420 &&
+         Math.hypot(tap.x-lastTap.x,tap.y-lastTap.y)<=55){
+        lastTap=null;
+        fingerGesture=null;
+        e.preventDefault();
+        goBack();
+        return;
+      }
+      lastTap=tap;
+    }
+
+    fingerGesture=null;
+    e.preventDefault();
+  },{capture:true,passive:false});
+
+  section.addEventListener('touchcancel',e=>{
+    if(enabled && fingerGesture && !isToolbarTarget(e.target)){
+      fingerGesture=null;
+      e.preventDefault();
+    }
+  },{capture:true,passive:false});
+
+  // Backup: iPadOS/Safari can synthesize dblclick for a finger double tap.
+  document.addEventListener('dblclick',e=>{
+    if(e.target.closest('button,input,label,a,summary,select,textarea')) return;
+    e.preventDefault();
+    goBack();
+  },{capture:true});
+
   toggle.addEventListener('click',()=>setEnabled(!enabled));
   penBtn.addEventListener('click',()=>setTool('pen'));
   highlighterBtn.addEventListener('click',()=>setTool('highlighter'));
@@ -1405,61 +1528,12 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     localStorage.removeItem(storageKey);
   });
 
-  // iPad Safari용 한 손가락 더블탭 = 뒤로가기.
-  // pointerup 대신 실제 touchend를 사용하고, 스크롤 제스처는 제외.
-  let tapStart=null;
-  let lastTap=null;
-
-  document.addEventListener('touchstart',e=>{
-    if(e.touches.length!==1){
-      tapStart=null;
-      return;
-    }
-    const t=e.touches[0];
-    tapStart={x:t.clientX,y:t.clientY,time:Date.now(),moved:false};
-  },{passive:true,capture:true});
-
-  document.addEventListener('touchmove',e=>{
-    if(!tapStart || e.touches.length!==1) return;
-    const t=e.touches[0];
-    if(Math.hypot(t.clientX-tapStart.x,t.clientY-tapStart.y)>12) tapStart.moved=true;
-  },{passive:true,capture:true});
-
-  document.addEventListener('touchend',e=>{
-    if(!tapStart || tapStart.moved || e.changedTouches.length!==1){
-      tapStart=null;
-      return;
-    }
-
-    const target=e.target;
-    if(target.closest('button,input,label,a,summary,select,textarea')){
-      tapStart=null;
-      return;
-    }
-
-    const t=e.changedTouches[0];
-    const now=Date.now();
-    const tap={x:t.clientX,y:t.clientY,time:now};
-
-    if(lastTap &&
-       now-lastTap.time<=380 &&
-       Math.hypot(tap.x-lastTap.x,tap.y-lastTap.y)<=45){
-      e.preventDefault();
-      lastTap=null;
-      tapStart=null;
-      history.back();
-      return;
-    }
-
-    lastTap=tap;
-    tapStart=null;
-  },{passive:false,capture:true});
-
   let resizeTimer;
   window.addEventListener('resize',()=>{
     clearTimeout(resizeTimer);
     resizeTimer=setTimeout(setupCanvas,180);
   });
+
   section.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{
     clearTimeout(resizeTimer);
     resizeTimer=setTimeout(setupCanvas,80);
