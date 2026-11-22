@@ -1285,6 +1285,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       highlighterCanvas.style.top='0';
       highlighterCanvas.style.pointerEvents='none';
       highlighterCanvas.style.zIndex='3';
+      highlighterCanvas.style.opacity=String(highlighterOpacity);
       canvas.insertAdjacentElement('afterend',highlighterCanvas);
     }
 
@@ -1292,6 +1293,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     highlighterCanvas.height=Math.round(h*dpr);
     highlighterCanvas.style.width=w+'px';
     highlighterCanvas.style.height=h+'px';
+    highlighterCanvas.style.opacity=String(highlighterOpacity);
 
     highlighterCtx=highlighterCanvas.getContext('2d');
     highlighterCtx.setTransform(dpr,0,0,dpr,0,0);
@@ -1384,6 +1386,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     opacityInput.value=pct;
     opacityValue.value=pct+'%';
     opacityValue.textContent=pct+'%';
+    if(highlighterCanvas) highlighterCanvas.style.opacity=String(highlighterOpacity);
     savePrefs();
   }
 
