@@ -142,12 +142,12 @@ html{scroll-behavior:smooth}
 .note-color[data-color="#222222"]{background:#222!important}
 .note-color[data-color="#2f6fe4"]{background:#2f6fe4!important}
 .note-color[data-color="#f2c94c"]{background:#f2c94c!important}
-.note-opacity{
+.note-opacity,.note-width{
   display:flex;align-items:center;gap:7px;padding:4px 7px;border-left:1px solid #e2e6eb;
   font-size:11px;font-weight:700;color:#59616d
 }
-.note-opacity input{width:110px}
-.note-opacity output{min-width:34px;text-align:right}
+.note-opacity input,.note-width input{width:110px}
+.note-opacity output,.note-width output{min-width:34px;text-align:right}
 #study-note-canvas{
   position:absolute;left:0;top:0;width:100%;height:100%;z-index:20;
   pointer-events:none;border-radius:20px
@@ -156,8 +156,8 @@ html{scroll-behavior:smooth}
 .study-materials.annotating *{-webkit-tap-highlight-color:transparent}
 @media(max-width:700px){
   .note-toolbar .note-hint{width:100%;margin-left:0}
-  .note-opacity{border-left:0;width:100%;padding-left:0}
-  .note-opacity input{flex:1}
+  .note-opacity,.note-width{border-left:0;width:100%;padding-left:0}
+  .note-opacity input,.note-width input{flex:1}
   .note-color-group{border-left:0;padding-left:0}
 }
 
@@ -1021,6 +1021,12 @@ html{scroll-behavior:smooth}
       <output id="note-opacity-value">35%</output>
     </label>
 
+    <label class="note-width" for="note-width">
+      펜 굵기
+      <input type="range" id="note-width" min="1" max="12" step="0.5" value="3.5">
+      <output id="note-width-value">3.5px</output>
+    </label>
+
     <button type="button" id="note-clear">🗑 전체 지우기</button>
     <span class="note-hint">iPad: Apple Pencil로 필기 · 손가락으로 스크롤/확대 · 새로고침해도 저장됨</span>
   </div>
@@ -1220,19 +1226,23 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   const clearBtn=document.getElementById('note-clear');
   const opacityInput=document.getElementById('note-opacity');
   const opacityValue=document.getElementById('note-opacity-value');
+  const widthInput=document.getElementById('note-width');
+  const widthValue=document.getElementById('note-width-value');
   const colorBtns=[...document.querySelectorAll('.note-color')];
-  if(!section||!canvas||!toolbar||!toggle||!penBtn||!highlighterBtn||!eraserBtn||!clearBtn||!opacityInput||!opacityValue) return;
+  if(!section||!canvas||!toolbar||!toggle||!penBtn||!highlighterBtn||!eraserBtn||!clearBtn||!opacityInput||!opacityValue||!widthInput||!widthValue) return;
 
   const storageKey='danbi-study-1122-drawing-v1';
-  const prefsKey='danbi-study-1122-drawing-prefs-v5';
+  const prefsKey='danbi-study-1122-drawing-prefs-v6';
 
   let enabled=false;
   let tool='pen';
   let color='#e14d68';
   let highlighterOpacity=.35;
+  let penWidth=3.5;
   let drawing=false;
   let activePointerId=null;
   let lastPoint=null;
+  let lastMidPoint=null;
   let ctx;
   let dpr=Math.max(1,window.devicePixelRatio||1);
 
@@ -1246,10 +1256,11 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     if(['pen','highlighter','eraser'].includes(prefs.tool)) tool=prefs.tool;
     if(['#e14d68','#222222','#2f6fe4','#f2c94c'].includes(prefs.color)) color=prefs.color;
     if(Number.isFinite(prefs.opacity)) highlighterOpacity=Math.min(.8,Math.max(.1,prefs.opacity));
+    if(Number.isFinite(prefs.penWidth)) penWidth=Math.min(12,Math.max(1,prefs.penWidth));
   }catch(e){}
 
   function savePrefs(){
-    localStorage.setItem(prefsKey,JSON.stringify({tool,color,opacity:highlighterOpacity}));
+    localStorage.setItem(prefsKey,JSON.stringify({tool,color,opacity:highlighterOpacity,penWidth}));
   }
 
   function hexToRgba(hex,alpha){
@@ -1302,6 +1313,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       drawing=false;
       activePointerId=null;
       lastPoint=null;
+      lastMidPoint=null;
       fingerGesture=null;
     }
   }
@@ -1329,33 +1341,70 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     savePrefs();
   }
 
+  function setPenWidth(value){
+    penWidth=Math.min(12,Math.max(1,Number(value)||3.5));
+    const shown=(Math.round(penWidth*10)/10).toString().replace(/\.0$/,'');
+    widthInput.value=penWidth;
+    widthValue.value=shown+'px';
+    widthValue.textContent=shown+'px';
+    savePrefs();
+  }
+
   function pointFromEvent(e){
     const r=canvas.getBoundingClientRect();
     return {x:e.clientX-r.left,y:e.clientY-r.top};
   }
 
-  function drawSegment(from,to){
-    ctx.beginPath();
-    ctx.moveTo(from.x,from.y);
-    ctx.lineTo(to.x,to.y);
-
+  function applyBrush(){
     if(tool==='eraser'){
       ctx.globalCompositeOperation='destination-out';
       ctx.globalAlpha=1;
-      ctx.lineWidth=30;
+      ctx.lineWidth=Math.max(18,penWidth*4);
       ctx.strokeStyle='rgba(0,0,0,1)';
     }else if(tool==='highlighter'){
       ctx.globalCompositeOperation='source-over';
       ctx.globalAlpha=1;
       ctx.strokeStyle=hexToRgba(color,highlighterOpacity);
-      ctx.lineWidth=18;
+      ctx.lineWidth=Math.max(12,penWidth*4);
     }else{
       ctx.globalCompositeOperation='source-over';
       ctx.globalAlpha=1;
       ctx.strokeStyle=color;
-      ctx.lineWidth=3.5;
+      ctx.lineWidth=penWidth;
+    }
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+  }
+
+  function midpoint(a,b){
+    return {x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+  }
+
+  function drawSmoothPoint(p){
+    if(!lastPoint){
+      lastPoint=p;
+      lastMidPoint=p;
+      return;
     }
 
+    const mid=midpoint(lastPoint,p);
+    applyBrush();
+    ctx.beginPath();
+    ctx.moveTo(lastMidPoint.x,lastMidPoint.y);
+    ctx.quadraticCurveTo(lastPoint.x,lastPoint.y,mid.x,mid.y);
+    ctx.stroke();
+    ctx.closePath();
+
+    lastPoint=p;
+    lastMidPoint=mid;
+  }
+
+  function finishSmoothStroke(){
+    if(!lastPoint||!lastMidPoint) return;
+    applyBrush();
+    ctx.beginPath();
+    ctx.moveTo(lastMidPoint.x,lastMidPoint.y);
+    ctx.lineTo(lastPoint.x,lastPoint.y);
     ctx.stroke();
     ctx.closePath();
   }
@@ -1370,6 +1419,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     drawing=true;
     activePointerId=e.pointerId;
     lastPoint=pointFromEvent(e);
+    lastMidPoint=lastPoint;
     try{ section.setPointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
     e.stopPropagation();
@@ -1377,18 +1427,21 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   section.addEventListener('pointermove',e=>{
     if(!enabled || !drawing || e.pointerType!=='pen' || e.pointerId!==activePointerId || !lastPoint) return;
-    const p=pointFromEvent(e);
-    drawSegment(lastPoint,p);
-    lastPoint=p;
+    const points=(typeof e.getCoalescedEvents==='function' ? e.getCoalescedEvents() : [e]);
+    for(const evt of points){
+      drawSmoothPoint(pointFromEvent(evt));
+    }
     e.preventDefault();
     e.stopPropagation();
   },{capture:true,passive:false});
 
   function stopPen(e){
     if(!drawing || e.pointerId!==activePointerId) return;
+    finishSmoothStroke();
     drawing=false;
     activePointerId=null;
     lastPoint=null;
+    lastMidPoint=null;
     ctx.globalCompositeOperation='source-over';
     ctx.globalAlpha=1;
     save();
@@ -1521,6 +1574,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   eraserBtn.addEventListener('click',()=>setTool('eraser'));
   colorBtns.forEach(btn=>btn.addEventListener('click',()=>setColor(btn.dataset.color)));
   opacityInput.addEventListener('input',()=>setOpacity(opacityInput.value));
+  widthInput.addEventListener('input',()=>setPenWidth(widthInput.value));
 
   clearBtn.addEventListener('click',()=>{
     if(!confirm('11/22 공부자료 필기를 전부 지울까요?')) return;
@@ -1542,6 +1596,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   setupCanvas();
   setColor(color);
   setOpacity(Math.round(highlighterOpacity*100));
+  setPenWidth(penWidth);
   setTool(tool);
   setEnabled(false);
 })();
