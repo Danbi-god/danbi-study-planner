@@ -117,6 +117,32 @@ html{scroll-behavior:smooth}
   .hero-character img{width:140px;max-width:45vw}
 }
 
+
+/* 공부자료 직접 필기 */
+.study-materials{position:relative}
+.note-toolbar{
+  position:sticky;top:8px;z-index:30;display:flex;gap:7px;flex-wrap:wrap;align-items:center;
+  margin:10px 0 14px;padding:9px;border:1px solid #dfe3e8;border-radius:12px;
+  background:rgba(255,255,255,.96);box-shadow:0 4px 16px rgba(0,0,0,.07);backdrop-filter:blur(6px)
+}
+.note-toolbar button{
+  border:1px solid #cfd6df;background:#fff;color:#303640;border-radius:9px;padding:7px 10px;
+  font-size:12px;font-weight:800;cursor:pointer
+}
+.note-toolbar button:hover{background:#f5f7fa}
+.note-toolbar button.active{background:#16233a;color:#fff;border-color:#16233a}
+.note-toolbar .note-hint{font-size:11px;color:#737b86;margin-left:auto}
+#study-note-canvas{
+  position:absolute;left:0;top:0;width:100%;height:100%;z-index:20;
+  pointer-events:none;border-radius:20px
+}
+.study-materials.annotating #study-note-canvas{
+  pointer-events:auto;cursor:crosshair;touch-action:none
+}
+@media(max-width:700px){
+  .note-toolbar .note-hint{width:100%;margin-left:0}
+}
+
 </style>
 </head>
 <body><div class="wrap">
@@ -958,6 +984,15 @@ html{scroll-behavior:smooth}
     <span>⏱ 권장 60~80분</span>
   </div>
 
+  <div class="note-toolbar" id="study-note-toolbar">
+    <button type="button" id="note-toggle">✏️ 필기 켜기</button>
+    <button type="button" id="note-pen" class="active">🖊 펜</button>
+    <button type="button" id="note-eraser">🧽 지우개</button>
+    <button type="button" id="note-clear">🗑 전체 지우기</button>
+    <span class="note-hint">필기 중에는 자료 위에 바로 그릴 수 있어요 · 새로고침해도 저장됨</span>
+  </div>
+  <canvas id="study-note-canvas" aria-label="11월 22일 공부자료 필기 캔버스"></canvas>
+
   <div class="material-grid">
     <article class="material-panel org">
       <h3>📘 조직행동론 9주차 — 의사결정</h3>
@@ -1139,5 +1174,136 @@ document.querySelectorAll('input[data-task]').forEach(cb=>{
 cb.checked=!!saved[cb.dataset.task];
 cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage.setItem(key,JSON.stringify(saved));});
 });
+
+/* 11/22 공부자료 필기 */
+(()=>{
+  const section=document.getElementById('study-1122');
+  const canvas=document.getElementById('study-note-canvas');
+  const toggle=document.getElementById('note-toggle');
+  const penBtn=document.getElementById('note-pen');
+  const eraserBtn=document.getElementById('note-eraser');
+  const clearBtn=document.getElementById('note-clear');
+  if(!section||!canvas||!toggle||!penBtn||!eraserBtn||!clearBtn) return;
+
+  const storageKey='danbi-study-1122-drawing-v1';
+  let enabled=false;
+  let tool='pen';
+  let drawing=false;
+  let ctx;
+  let dpr=Math.max(1,window.devicePixelRatio||1);
+
+  function setupCanvas(){
+    const saved=localStorage.getItem(storageKey);
+    const old=document.createElement('canvas');
+    if(canvas.width&&canvas.height){
+      old.width=canvas.width; old.height=canvas.height;
+      old.getContext('2d').drawImage(canvas,0,0);
+    }
+
+    dpr=Math.max(1,window.devicePixelRatio||1);
+    const w=Math.max(1,section.clientWidth);
+    const h=Math.max(1,section.scrollHeight);
+    canvas.width=Math.round(w*dpr);
+    canvas.height=Math.round(h*dpr);
+    canvas.style.width=w+'px';
+    canvas.style.height=h+'px';
+    ctx=canvas.getContext('2d');
+    ctx.scale(dpr,dpr);
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+
+    if(saved){
+      const img=new Image();
+      img.onload=()=>ctx.drawImage(img,0,0,w,h);
+      img.src=saved;
+    }else if(old.width&&old.height){
+      ctx.drawImage(old,0,0,old.width,old.height,0,0,w,h);
+    }
+  }
+
+  function save(){
+    try{ localStorage.setItem(storageKey,canvas.toDataURL('image/png')); }catch(e){}
+  }
+
+  function setEnabled(on){
+    enabled=on;
+    section.classList.toggle('annotating',enabled);
+    toggle.classList.toggle('active',enabled);
+    toggle.textContent=enabled?'✅ 필기 끄기':'✏️ 필기 켜기';
+  }
+
+  function setTool(next){
+    tool=next;
+    penBtn.classList.toggle('active',tool==='pen');
+    eraserBtn.classList.toggle('active',tool==='eraser');
+  }
+
+  function point(e){
+    const r=canvas.getBoundingClientRect();
+    return {x:e.clientX-r.left,y:e.clientY-r.top};
+  }
+
+  canvas.addEventListener('pointerdown',e=>{
+    if(!enabled) return;
+    drawing=true;
+    canvas.setPointerCapture(e.pointerId);
+    const p=point(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    e.preventDefault();
+  });
+
+  canvas.addEventListener('pointermove',e=>{
+    if(!enabled||!drawing) return;
+    const p=point(e);
+    if(tool==='eraser'){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.lineWidth=28;
+    }else{
+      ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle='#e14d68';
+      ctx.lineWidth=3.5;
+    }
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+    e.preventDefault();
+  });
+
+  function stop(e){
+    if(!drawing) return;
+    drawing=false;
+    ctx.closePath();
+    ctx.globalCompositeOperation='source-over';
+    save();
+    if(e?.pointerId!=null && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+  }
+  canvas.addEventListener('pointerup',stop);
+  canvas.addEventListener('pointercancel',stop);
+  canvas.addEventListener('pointerleave',e=>{ if(drawing) stop(e); });
+
+  toggle.addEventListener('click',()=>setEnabled(!enabled));
+  penBtn.addEventListener('click',()=>setTool('pen'));
+  eraserBtn.addEventListener('click',()=>setTool('eraser'));
+  clearBtn.addEventListener('click',()=>{
+    if(!confirm('11/22 공부자료 필기를 전부 지울까요?')) return;
+    ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
+    localStorage.removeItem(storageKey);
+  });
+
+  let resizeTimer;
+  window.addEventListener('resize',()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(setupCanvas,180);
+  });
+  section.querySelectorAll('details').forEach(d=>d.addEventListener('toggle',()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer=setTimeout(setupCanvas,80);
+  }));
+
+  setupCanvas();
+  setTool('pen');
+  setEnabled(false);
+})();
+
 </script>
 </body></html>
