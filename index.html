@@ -132,15 +132,36 @@ html{scroll-behavior:smooth}
 .note-toolbar button:hover{background:#f5f7fa}
 .note-toolbar button.active{background:#16233a;color:#fff;border-color:#16233a}
 .note-toolbar .note-hint{font-size:11px;color:#737b86;margin-left:auto}
+.note-color-group{display:flex;align-items:center;gap:5px;padding:3px 6px;border-left:1px solid #e2e6eb}
+.note-color{
+  width:27px!important;height:27px!important;min-width:27px;padding:0!important;border-radius:50%!important;
+  border:2px solid #fff!important;box-shadow:0 0 0 1px #bfc6cf;position:relative
+}
+.note-color.active{box-shadow:0 0 0 3px #16233a!important}
+.note-color[data-color="#e14d68"]{background:#e14d68!important}
+.note-color[data-color="#222222"]{background:#222!important}
+.note-color[data-color="#2f6fe4"]{background:#2f6fe4!important}
+.note-color[data-color="#f2c94c"]{background:#f2c94c!important}
+.note-opacity{
+  display:flex;align-items:center;gap:7px;padding:4px 7px;border-left:1px solid #e2e6eb;
+  font-size:11px;font-weight:700;color:#59616d
+}
+.note-opacity input{width:110px}
+.note-opacity output{min-width:34px;text-align:right}
 #study-note-canvas{
   position:absolute;left:0;top:0;width:100%;height:100%;z-index:20;
   pointer-events:none;border-radius:20px
 }
 .study-materials.annotating #study-note-canvas{
-  pointer-events:auto;cursor:crosshair;touch-action:none
+  pointer-events:auto;cursor:crosshair;
+  /* iPad: Apple Pencil은 필기, 손가락은 네이티브 스크롤/확대 허용 */
+  touch-action:pan-x pan-y pinch-zoom
 }
 @media(max-width:700px){
   .note-toolbar .note-hint{width:100%;margin-left:0}
+  .note-opacity{border-left:0;width:100%;padding-left:0}
+  .note-opacity input{flex:1}
+  .note-color-group{border-left:0;padding-left:0}
 }
 
 </style>
@@ -987,9 +1008,24 @@ html{scroll-behavior:smooth}
   <div class="note-toolbar" id="study-note-toolbar">
     <button type="button" id="note-toggle">✏️ 필기 켜기</button>
     <button type="button" id="note-pen" class="active">🖊 펜</button>
+    <button type="button" id="note-highlighter">🖍 형광펜</button>
     <button type="button" id="note-eraser">🧽 지우개</button>
+
+    <div class="note-color-group" aria-label="펜 색상">
+      <button type="button" class="note-color active" data-color="#e14d68" aria-label="빨강" title="빨강"></button>
+      <button type="button" class="note-color" data-color="#222222" aria-label="검정" title="검정"></button>
+      <button type="button" class="note-color" data-color="#2f6fe4" aria-label="파랑" title="파랑"></button>
+      <button type="button" class="note-color" data-color="#f2c94c" aria-label="노랑" title="노랑"></button>
+    </div>
+
+    <label class="note-opacity" for="note-opacity">
+      형광펜 농도
+      <input type="range" id="note-opacity" min="10" max="80" step="5" value="35">
+      <output id="note-opacity-value">35%</output>
+    </label>
+
     <button type="button" id="note-clear">🗑 전체 지우기</button>
-    <span class="note-hint">필기 중에는 자료 위에 바로 그릴 수 있어요 · 새로고침해도 저장됨</span>
+    <span class="note-hint">iPad: Apple Pencil로 필기 · 손가락으로 스크롤/확대 · 새로고침해도 저장됨</span>
   </div>
   <canvas id="study-note-canvas" aria-label="11월 22일 공부자료 필기 캔버스"></canvas>
 
@@ -1181,16 +1217,35 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   const canvas=document.getElementById('study-note-canvas');
   const toggle=document.getElementById('note-toggle');
   const penBtn=document.getElementById('note-pen');
+  const highlighterBtn=document.getElementById('note-highlighter');
   const eraserBtn=document.getElementById('note-eraser');
   const clearBtn=document.getElementById('note-clear');
-  if(!section||!canvas||!toggle||!penBtn||!eraserBtn||!clearBtn) return;
+  const opacityInput=document.getElementById('note-opacity');
+  const opacityValue=document.getElementById('note-opacity-value');
+  const colorBtns=[...document.querySelectorAll('.note-color')];
+  if(!section||!canvas||!toggle||!penBtn||!highlighterBtn||!eraserBtn||!clearBtn||!opacityInput||!opacityValue) return;
 
   const storageKey='danbi-study-1122-drawing-v1';
+  const prefsKey='danbi-study-1122-drawing-prefs-v2';
   let enabled=false;
   let tool='pen';
+  let color='#e14d68';
+  let highlighterOpacity=.35;
   let drawing=false;
+  let activePointerId=null;
   let ctx;
   let dpr=Math.max(1,window.devicePixelRatio||1);
+
+  try{
+    const prefs=JSON.parse(localStorage.getItem(prefsKey)||'{}');
+    if(['pen','highlighter','eraser'].includes(prefs.tool)) tool=prefs.tool;
+    if(['#e14d68','#222222','#2f6fe4','#f2c94c'].includes(prefs.color)) color=prefs.color;
+    if(Number.isFinite(prefs.opacity)) highlighterOpacity=Math.min(.8,Math.max(.1,prefs.opacity));
+  }catch(e){}
+
+  function savePrefs(){
+    localStorage.setItem(prefsKey,JSON.stringify({tool,color,opacity:highlighterOpacity}));
+  }
 
   function setupCanvas(){
     const saved=localStorage.getItem(storageKey);
@@ -1235,7 +1290,23 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   function setTool(next){
     tool=next;
     penBtn.classList.toggle('active',tool==='pen');
+    highlighterBtn.classList.toggle('active',tool==='highlighter');
     eraserBtn.classList.toggle('active',tool==='eraser');
+    savePrefs();
+  }
+
+  function setColor(next){
+    color=next;
+    colorBtns.forEach(btn=>btn.classList.toggle('active',btn.dataset.color===color));
+    savePrefs();
+  }
+
+  function setOpacity(percent){
+    highlighterOpacity=Math.min(.8,Math.max(.1,Number(percent)/100));
+    opacityInput.value=Math.round(highlighterOpacity*100);
+    opacityValue.value=Math.round(highlighterOpacity*100)+'%';
+    opacityValue.textContent=opacityValue.value;
+    savePrefs();
   }
 
   function point(e){
@@ -1245,8 +1316,14 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   canvas.addEventListener('pointerdown',e=>{
     if(!enabled) return;
+
+    // iPad 손가락은 필기 캔버스가 잡지 않고 브라우저 스크롤/핀치에 맡김.
+    // Apple Pencil은 pointerType='pen'으로 정상 필기.
+    if(e.pointerType==='touch') return;
+
     drawing=true;
-    canvas.setPointerCapture(e.pointerId);
+    activePointerId=e.pointerId;
+    canvas.setPointerCapture?.(e.pointerId);
     const p=point(e);
     ctx.beginPath();
     ctx.moveTo(p.x,p.y);
@@ -1254,16 +1331,25 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   });
 
   canvas.addEventListener('pointermove',e=>{
-    if(!enabled||!drawing) return;
+    if(!enabled||!drawing||e.pointerId!==activePointerId) return;
     const p=point(e);
+
     if(tool==='eraser'){
       ctx.globalCompositeOperation='destination-out';
-      ctx.lineWidth=28;
+      ctx.globalAlpha=1;
+      ctx.lineWidth=30;
+    }else if(tool==='highlighter'){
+      ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=highlighterOpacity;
+      ctx.strokeStyle=color;
+      ctx.lineWidth=18;
     }else{
       ctx.globalCompositeOperation='source-over';
-      ctx.strokeStyle='#e14d68';
+      ctx.globalAlpha=1;
+      ctx.strokeStyle=color;
       ctx.lineWidth=3.5;
     }
+
     ctx.lineTo(p.x,p.y);
     ctx.stroke();
     e.preventDefault();
@@ -1271,19 +1357,29 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   function stop(e){
     if(!drawing) return;
+    if(e?.pointerId!=null && activePointerId!==null && e.pointerId!==activePointerId) return;
     drawing=false;
     ctx.closePath();
     ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=1;
     save();
     if(e?.pointerId!=null && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    activePointerId=null;
   }
+
   canvas.addEventListener('pointerup',stop);
   canvas.addEventListener('pointercancel',stop);
-  canvas.addEventListener('pointerleave',e=>{ if(drawing) stop(e); });
+  canvas.addEventListener('pointerleave',e=>{
+    if(drawing && e.pointerType!=='pen') stop(e);
+  });
 
   toggle.addEventListener('click',()=>setEnabled(!enabled));
   penBtn.addEventListener('click',()=>setTool('pen'));
+  highlighterBtn.addEventListener('click',()=>setTool('highlighter'));
   eraserBtn.addEventListener('click',()=>setTool('eraser'));
+  colorBtns.forEach(btn=>btn.addEventListener('click',()=>setColor(btn.dataset.color)));
+  opacityInput.addEventListener('input',()=>setOpacity(opacityInput.value));
+
   clearBtn.addEventListener('click',()=>{
     if(!confirm('11/22 공부자료 필기를 전부 지울까요?')) return;
     ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
@@ -1301,7 +1397,9 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   }));
 
   setupCanvas();
-  setTool('pen');
+  setColor(color);
+  setOpacity(Math.round(highlighterOpacity*100));
+  setTool(tool);
   setEnabled(false);
 })();
 
