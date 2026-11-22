@@ -106,18 +106,36 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,B
 
 
 html{scroll-behavior:smooth}
+
+.hero-inner{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.hero-copy{flex:1;min-width:0}
+.hero-character{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.hero-character img{display:block;width:170px;height:auto;max-width:28vw}
+@media(max-width:700px){
+  .hero-inner{flex-direction:column;align-items:flex-start}
+  .hero-character{align-self:center}
+  .hero-character img{width:140px;max-width:45vw}
+}
+
 </style>
 </head>
 <body><div class="wrap">
 
 <section class="hero">
-<h1>학교·회사 통합 공부 플래너</h1>
-<p>이제 <b>학교 공부 / 학교 과제 / 학교 시험 / 회사 자격증</b>을 색으로 완전히 구분했습니다.</p>
-<div class="legend">
-<span class="l-study">📘 학교 공부</span>
-<span class="l-assign">📝 학교 과제</span>
-<span class="l-exam">🚨 시험·마감일</span>
-<span class="l-company">💼 회사 자격증</span>
+<div class="hero-inner">
+  <div class="hero-copy">
+    <h1>학교·회사 통합 공부 플래너</h1>
+    <p>이제 <b>학교 공부 / 학교 과제 / 학교 시험 / 회사 자격증</b>을 색으로 완전히 구분했습니다.</p>
+    <div class="legend">
+      <span class="l-study">📘 학교 공부</span>
+      <span class="l-assign">📝 학교 과제</span>
+      <span class="l-exam">🚨 시험·마감일</span>
+      <span class="l-company">💼 회사 자격증</span>
+    </div>
+  </div>
+  <div class="hero-character">
+    <img src="./hachi.webp" alt="하치와레 캐릭터">
+  </div>
 </div>
 </section>
 
