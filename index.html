@@ -1248,6 +1248,8 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   let penMoved=false;
   let lastPenTap=null;
   let ctx;
+  let highlighterCanvas=null;
+  let highlighterCtx=null;
   let dpr=Math.max(1,window.devicePixelRatio||1);
 
   // finger scrolling / double tap
@@ -1274,6 +1276,30 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     return 'rgba('+r+','+g+','+b+','+alpha+')';
   }
 
+  function setupHighlighterCanvas(w,h){
+    if(!highlighterCanvas){
+      highlighterCanvas=document.createElement('canvas');
+      highlighterCanvas.setAttribute('aria-hidden','true');
+      highlighterCanvas.style.position='absolute';
+      highlighterCanvas.style.left='0';
+      highlighterCanvas.style.top='0';
+      highlighterCanvas.style.pointerEvents='none';
+      highlighterCanvas.style.zIndex='3';
+      canvas.insertAdjacentElement('afterend',highlighterCanvas);
+    }
+
+    highlighterCanvas.width=Math.round(w*dpr);
+    highlighterCanvas.height=Math.round(h*dpr);
+    highlighterCanvas.style.width=w+'px';
+    highlighterCanvas.style.height=h+'px';
+
+    highlighterCtx=highlighterCanvas.getContext('2d');
+    highlighterCtx.setTransform(dpr,0,0,dpr,0,0);
+    highlighterCtx.lineCap='round';
+    highlighterCtx.lineJoin='round';
+    highlighterCtx.clearRect(0,0,w,h);
+  }
+
   function setupCanvas(){
     const saved=localStorage.getItem(storageKey);
     const old=document.createElement('canvas');
@@ -1291,9 +1317,10 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     canvas.style.height=h+'px';
 
     ctx=canvas.getContext('2d');
-    ctx.scale(dpr,dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.lineCap='round';
     ctx.lineJoin='round';
+    setupHighlighterCanvas(w,h);
 
     if(saved){
       const img=new Image();
@@ -1323,6 +1350,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       penMoved=false;
       lastPenTap=null;
       fingerGesture=null;
+      clearHighlighterLayer();
     }
   }
 
@@ -1373,25 +1401,53 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     return {x:e.clientX-r.left,y:e.clientY-r.top};
   }
 
-  function applyBrush(){
+  function activeDrawContext(){
+    return tool==='highlighter' && highlighterCtx ? highlighterCtx : ctx;
+  }
+
+  function applyBrush(drawCtx=activeDrawContext()){
     if(tool==='eraser'){
-      ctx.globalCompositeOperation='destination-out';
-      ctx.globalAlpha=1;
-      ctx.lineWidth=Math.max(18,penWidth*4);
-      ctx.strokeStyle='rgba(0,0,0,1)';
+      drawCtx.globalCompositeOperation='destination-out';
+      drawCtx.globalAlpha=1;
+      drawCtx.lineWidth=Math.max(18,penWidth*4);
+      drawCtx.strokeStyle='rgba(0,0,0,1)';
     }else if(tool==='highlighter'){
-      ctx.globalCompositeOperation='source-over';
-      ctx.globalAlpha=1;
-      ctx.strokeStyle=hexToRgba(color,highlighterOpacity);
-      ctx.lineWidth=Math.max(12,penWidth*4);
+      // Draw this whole stroke opaque on the temporary layer.
+      // Opacity is applied exactly once in commitHighlighterStroke().
+      drawCtx.globalCompositeOperation='source-over';
+      drawCtx.globalAlpha=1;
+      drawCtx.strokeStyle=color;
+      drawCtx.lineWidth=Math.max(12,penWidth*4);
     }else{
-      ctx.globalCompositeOperation='source-over';
-      ctx.globalAlpha=1;
-      ctx.strokeStyle=color;
-      ctx.lineWidth=penWidth;
+      drawCtx.globalCompositeOperation='source-over';
+      drawCtx.globalAlpha=1;
+      drawCtx.strokeStyle=color;
+      drawCtx.lineWidth=penWidth;
     }
-    ctx.lineCap='round';
-    ctx.lineJoin='round';
+    drawCtx.lineCap='round';
+    drawCtx.lineJoin='round';
+  }
+
+  function clearHighlighterLayer(){
+    if(!highlighterCtx||!highlighterCanvas) return;
+    highlighterCtx.save();
+    highlighterCtx.setTransform(1,0,0,1,0,0);
+    highlighterCtx.clearRect(0,0,highlighterCanvas.width,highlighterCanvas.height);
+    highlighterCtx.restore();
+  }
+
+  function commitHighlighterStroke(){
+    if(tool!=='highlighter'||!highlighterCanvas||!highlighterCtx) return;
+    ctx.save();
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=highlighterOpacity;
+    ctx.drawImage(
+      highlighterCanvas,
+      0,0,highlighterCanvas.width,highlighterCanvas.height,
+      0,0,canvas.width/dpr,canvas.height/dpr
+    );
+    ctx.restore();
+    clearHighlighterLayer();
   }
 
   function midpoint(a,b){
@@ -1406,12 +1462,13 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     }
 
     const mid=midpoint(lastPoint,p);
-    applyBrush();
-    ctx.beginPath();
-    ctx.moveTo(lastMidPoint.x,lastMidPoint.y);
-    ctx.quadraticCurveTo(lastPoint.x,lastPoint.y,mid.x,mid.y);
-    ctx.stroke();
-    ctx.closePath();
+    const drawCtx=activeDrawContext();
+    applyBrush(drawCtx);
+    drawCtx.beginPath();
+    drawCtx.moveTo(lastMidPoint.x,lastMidPoint.y);
+    drawCtx.quadraticCurveTo(lastPoint.x,lastPoint.y,mid.x,mid.y);
+    drawCtx.stroke();
+    drawCtx.closePath();
 
     lastPoint=p;
     lastMidPoint=mid;
@@ -1419,12 +1476,13 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   function finishSmoothStroke(){
     if(!lastPoint||!lastMidPoint) return;
-    applyBrush();
-    ctx.beginPath();
-    ctx.moveTo(lastMidPoint.x,lastMidPoint.y);
-    ctx.lineTo(lastPoint.x,lastPoint.y);
-    ctx.stroke();
-    ctx.closePath();
+    const drawCtx=activeDrawContext();
+    applyBrush(drawCtx);
+    drawCtx.beginPath();
+    drawCtx.moveTo(lastMidPoint.x,lastMidPoint.y);
+    drawCtx.lineTo(lastPoint.x,lastPoint.y);
+    drawCtx.stroke();
+    drawCtx.closePath();
   }
 
   function isToolbarTarget(target){
@@ -1436,6 +1494,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     if(!enabled || e.pointerType!=='pen' || isToolbarTarget(e.target)) return;
     drawing=true;
     activePointerId=e.pointerId;
+    if(tool==='highlighter') clearHighlighterLayer();
     lastPoint=pointFromEvent(e);
     lastMidPoint=lastPoint;
     penStartPoint=lastPoint;
@@ -1473,6 +1532,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
     if(penMoved){
       finishSmoothStroke();
+      if(tool==='highlighter') commitHighlighterStroke();
       save();
     }else if(isPenTap){
       const tap={x:endPoint.x,y:endPoint.y,time:now};
@@ -1630,6 +1690,7 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   clearBtn.addEventListener('click',()=>{
     if(!confirm('11/22 공부자료 필기를 전부 지울까요?')) return;
     ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
+    clearHighlighterLayer();
     localStorage.removeItem(storageKey);
   });
 
