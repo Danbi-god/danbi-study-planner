@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>단비 공부플래너</title>
+<link rel="icon" type="image/png" sizes="128x128" href="data:image/png;base64,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"><text y=%22.9em%22 font-size=%2290%22>🐱</text></svg>">
+<style>
+:root{
+--bg:#f4f6f9;--card:#fff;--text:#20242c;--line:#dfe3e8;
+--school:#3768d8;--school-soft:#edf3ff;
+--company:#e47b32;--company-soft:#fff2e8;
+--assign:#8a5bd1;--assign-soft:#f4edff;
+--study-soft:#eef4ff;--exam-soft:#ffeaea;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans KR",Arial,sans-serif;line-height:1.45}
+.wrap{max-width:1500px;margin:auto;padding:24px}
+.hero,.section,.calendar-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;margin:18px 0}
+.hero h1{margin:0 0 8px;font-size:30px} .hero p{margin:0;color:#666d78}
+.legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.legend span{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.l-study{background:var(--study-soft);color:var(--school)}
+.l-assign{background:var(--assign-soft);color:var(--assign)}
+.l-exam{background:var(--exam-soft);color:#c84f4f}
+.l-company{background:var(--company-soft);color:var(--company)}
+.section-head,.section-title-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.section-head h2,.section-title-row h2{margin:0;font-size:22px}
+.tag{font-size:12px;font-weight:700;padding:5px 9px;border-radius:999px}
+.tag.school{background:var(--school-soft);color:var(--school)} .tag.company{background:var(--company-soft);color:var(--company)}
+.exam-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.exam-card{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:14px;padding:12px}
+.school-card{border-left:5px solid var(--school)} .assignment-card{border-left:5px solid var(--assign)} .company-card{border-left:5px solid var(--company)}
+.date-chip{font-weight:800;min-width:58px} .company-date{color:var(--company)} .exam-card small{display:block;color:#757c86;margin-top:2px}
+.priority-note,.notice{margin-top:12px;font-size:13px;border-radius:10px;padding:11px}
+.priority-note{background:#fafbfc} .notice{background:#fff8e8;border:1px solid #f4d99b}
+.calendar-wrap{overflow-x:auto} .calendar{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:1080px}
+.calendar th{padding:9px;border-bottom:1px solid var(--line);font-size:13px;color:#6d7480} .calendar th:first-child{color:#cf5d63} .calendar th:last-child{color:#5371bc}
+.day{height:190px;vertical-align:top;padding:7px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
+.day:nth-child(7){border-right:0} .day.muted{background:#fafafa;color:#bbb}
+.date-num{font-size:14px;font-weight:800} .today .date-num{background:#242b35;color:#fff;border-radius:999px;padding:2px 7px}
+.deadline-day{box-shadow:inset 0 0 0 2px #d76b6b}
+.tasks{display:flex;flex-direction:column;gap:6px;margin-top:7px}
+.task{display:flex;gap:6px;border-radius:9px;padding:7px;font-size:11px;border:1px solid rgba(0,0,0,.05);cursor:pointer}
+.task-study{background:var(--study-soft)} .task-assignment{background:var(--assign-soft)} .task-exam{background:var(--exam-soft);font-weight:700}
+.task input{margin-top:2px} .task:has(input:checked){opacity:.45;text-decoration:line-through}
+.mini-badge{font-size:9px;border:1px solid rgba(0,0,0,.08);padding:1px 4px;border-radius:5px;margin-right:4px;background:white}
+.task-text{margin-top:2px;color:#4f5660}
+.roadmap{display:flex;flex-direction:column;gap:8px} .road-row{display:grid;grid-template-columns:150px 120px 1fr;gap:10px;align-items:center;padding:11px;border-radius:12px;background:#fffaf6;border:1px solid #f4dfcf}
+.road-time{font-weight:800;color:#b65d20} .road-focus{font-weight:700} .road-desc{color:#5f6670;font-size:13px}
+.footer{text-align:center;color:#8b9199;font-size:12px;margin:22px 0}
+@media(max-width:900px){.wrap{padding:12px}.exam-grid{grid-template-columns:1fr}.road-row{grid-template-columns:1fr}}
+
+/* 11/22 study materials */
+.material-btn{
+  display:block;margin-top:8px;padding:7px 9px;border-radius:9px;
+  background:#16233a;color:#fff;text-decoration:none;font-size:12px;font-weight:800;
+  text-align:center;box-shadow:0 2px 7px rgba(22,35,58,.12)
+}
+.material-btn:hover{filter:brightness(1.08)}
+.study-materials{scroll-margin-top:18px}
+.material-summary{
+  display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px
+}
+.material-summary span{
+  background:#f5f7fa;border:1px solid var(--line);border-radius:999px;
+  padding:6px 10px;font-size:12px;font-weight:700
+}
+.material-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.material-panel{
+  border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff
+}
+.material-panel.org{border-top:5px solid #3768d8}
+.material-panel.writing{border-top:5px solid #8a5bd1}
+.material-panel h3{margin:0 0 5px;font-size:18px}
+.material-panel .source-note{color:#7a818c;font-size:11px;margin-bottom:12px}
+.material-panel details{
+  border:1px solid #e5e8ed;border-radius:12px;margin:8px 0;background:#fafbfd;overflow:hidden
+}
+.material-panel summary{
+  cursor:pointer;padding:11px 12px;font-weight:800;list-style:none
+}
+.material-panel summary::-webkit-details-marker{display:none}
+.material-panel details[open] summary{border-bottom:1px solid #e5e8ed;background:#f4f7fb}
+.detail-body{padding:11px 13px;font-size:13px}
+.detail-body p{margin:5px 0}
+.detail-body ul{margin:5px 0 5px 18px;padding:0}
+.detail-body li{margin:4px 0}
+.study-table{width:100%;border-collapse:collapse;font-size:12px;margin:7px 0}
+.study-table th,.study-table td{border:1px solid #e2e6eb;padding:7px;vertical-align:top;text-align:left}
+.study-table th{background:#f3f5f8;font-weight:800}
+.memory-box{
+  margin-top:9px;padding:10px 12px;border-radius:11px;background:#fff8e8;
+  border:1px solid #f4d99b;font-size:12px
+}
+.today-check{
+  margin-top:14px;border:1px dashed #cfd6df;border-radius:14px;padding:13px;background:#fbfcfe
+}
+.today-check h3{margin:0 0 8px;font-size:16px}
+.today-check label{display:flex;gap:8px;align-items:flex-start;margin:7px 0;font-size:13px}
+.quick-q{margin:7px 0}
+.quick-q summary{background:#fff !important}
+@media(max-width:900px){.material-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body><div class="wrap">
+
+<section class="hero">
+<h1>학교·회사 통합 공부 플래너</h1>
+<p>이제 <b>학교 공부 / 학교 과제 / 학교 시험 / 회사 자격증</b>을 색으로 완전히 구분했습니다.</p>
+<div class="legend">
+<span class="l-study">📘 학교 공부</span>
+<span class="l-assign">📝 학교 과제</span>
+<span class="l-exam">🚨 시험·마감일</span>
+<span class="l-company">💼 회사 자격증</span>
+</div>
+</section>
+
+<section class="section">
+<div class="section-head"><h2>학교 시험</h2><span class="tag school">학교</span></div>
+<div class="exam-grid"><div class="exam-card school-card"><div class="date-chip">12/08</div><div><strong>조직행동론</strong><small>시험 · 9~14강</small></div></div><div class="exam-card school-card"><div class="date-chip">12/12</div><div><strong>문제해결을 위한 글쓰기</strong><small>시험 · 1~14주차 전체</small></div></div><div class="exam-card school-card"><div class="date-chip">12/12</div><div><strong>경영정보론</strong><small>시험 · 9~14주차</small></div></div><div class="exam-card school-card"><div class="date-chip">12/12</div><div><strong>마케팅원론</strong><small>시험 · 5·6·7강(예상)</small></div></div><div class="exam-card school-card"><div class="date-chip">12/16</div><div><strong>미디어와 콘텐츠</strong><small>시험 · 1~14주차 전체</small></div></div></div>
+</section>
+
+<section class="section">
+<div class="section-head"><h2>학교 과제 마감</h2><span class="tag school">과제</span></div>
+<div class="exam-grid"><div class="exam-card assignment-card"><div class="date-chip">11/30</div><div><strong>경영정보론</strong><small>과제 마감</small></div></div><div class="exam-card assignment-card"><div class="date-chip">12/12</div><div><strong>미래사회와 소프트웨어-인문사회계열</strong><small>기말과제(기말고사 대체과제) 마감</small></div></div></div>
+<div class="priority-note"><b>과제 운영:</b> 마감 전날 처음 시작하지 않도록 요구사항 확인 → 초안 → 수정 → 제출 확인 순서로 캘린더에 미리 배치했습니다.</div>
+</section>
+
+
+    <section class="calendar-card">
+      <div class="section-title-row"><h2>11월 · 조직행동론 + 경영정보 과제</h2><span class="tag school">학교</span></div>
+      <div class="calendar-wrap">
+        <table class="calendar">
+        <thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>
+        <tbody><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">1</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">2</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">3</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">4</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">5</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">6</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">7</span></div>
+                <div class="tasks"></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">8</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">9</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">10</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">11</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">12</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">13</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">14</span></div>
+                <div class="tasks"></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">15</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">16</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">17</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">18</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">19</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">20</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">21</span></div>
+                <div class="tasks"></div>
+            </td></tr><tr>
+            <td class="day today">
+                <div class="date-row"><span class="date-num">22</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-22-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">9강 정리</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-22-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">1~2주차 훑기</div>
+      </div>
+    </label>
+    <a class="material-btn" href="#study-1122">📚 22일 공부자료 보기</a>
+    </div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">23</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-23-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">10강 정리 + 9강 회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-23-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>경영정보론</b>
+        <div class="task-text">9주차 훑기</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">24</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-24-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">11강 정리</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-24-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>마케팅원론</b>
+        <div class="task-text">5강 1회독</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">25</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-25-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">12강 정리</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-25-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">과제 요구사항 확인 + 자료 정리</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">26</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-26-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">13강 정리</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-26-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">3~4주차</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">27</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-27-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">14강 정리</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-27-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">과제 초안/1차 작성</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">28</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-28-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">9~14강 전체 1회독</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-28-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>마케팅원론</b>
+        <div class="task-text">5강 핵심용어</div>
+      </div>
+    </label></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">29</span></div>
+                <div class="tasks">
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-29-0">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">과제 최종 수정 + 제출 전 확인</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-29-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">5~6주차</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day deadline-day">
+                <div class="date-row"><span class="date-num">30</span></div>
+                <div class="tasks">
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-30-0">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">★ 과제 마감 / 제출 확인</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-30-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>조직행동론</b>
+        <div class="task-text">9~11강 암기·회상</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">1</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-01-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">12~14강 암기·회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-01-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>경영정보론</b>
+        <div class="task-text">10~11주차</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">2</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-02-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">취약 개념 정리</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-02-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">기말대체과제 요구사항 확인</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">3</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-03-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">예상문제·객관식 회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-03-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>마케팅원론</b>
+        <div class="task-text">6강 1회독</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">4</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-04-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">전체 2회독</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-04-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">자료수집 + 구성 잡기</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">5</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-05-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">오답·헷갈리는 개념</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-05-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">1~4주차</div>
+      </div>
+    </label></div>
+            </td></tr></tbody></table>
+      </div>
+    </section>
+
+    <section class="calendar-card">
+      <div class="section-title-row"><h2>12월 · 시험 + 기말대체과제</h2><span class="tag school">학교</span></div>
+      <div class="calendar-wrap">
+        <table class="calendar">
+        <thead><tr><th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th></tr></thead>
+        <tbody><tr>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">29</span></div>
+                <div class="tasks">
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-29-0">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">과제 최종 수정 + 제출 전 확인</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-29-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">5~6주차</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day muted deadline-day">
+                <div class="date-row"><span class="date-num">30</span></div>
+                <div class="tasks">
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-11-30-0">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>경영정보론</b>
+        <div class="task-text">★ 과제 마감 / 제출 확인</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-11-30-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>조직행동론</b>
+        <div class="task-text">9~11강 암기·회상</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">1</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-01-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">12~14강 암기·회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-01-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>경영정보론</b>
+        <div class="task-text">10~11주차</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">2</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-02-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">취약 개념 정리</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-02-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">기말대체과제 요구사항 확인</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">3</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-03-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">예상문제·객관식 회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-03-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>마케팅원론</b>
+        <div class="task-text">6강 1회독</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">4</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-04-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">전체 2회독</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-04-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">자료수집 + 구성 잡기</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">5</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-05-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">오답·헷갈리는 개념</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-05-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">1~4주차</div>
+      </div>
+    </label></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">6</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-06-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">최종복습 9~11강</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-06-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">과제 1차 작성</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">7</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-07-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>조직행동론</b>
+        <div class="task-text">최종복습 12~14강 + 암기</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-07-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>경영정보론</b>
+        <div class="task-text">12~13주차 가볍게</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day deadline-day">
+                <div class="date-row"><span class="date-num">8</span></div>
+                <div class="tasks">
+    <label class="task task-exam">
+      <input type="checkbox" data-task="2026-12-08-0">
+      <div>
+        <span class="mini-badge">시험</span>
+        <b>조직행동론</b>
+        <div class="task-text">★ 시험</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-08-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">과제 2차 작성</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">9</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-09-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">7~10주차 + 핵심 회상</div>
+      </div>
+    </label>
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-09-1">
+      <div>
+        <span class="mini-badge">가볍게</span>
+        <b>경영정보론</b>
+        <div class="task-text">9~11주차 총복습</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">10</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-10-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>경영정보론</b>
+        <div class="task-text">12~14주차 총복습</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-10-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">과제 최종 수정</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">11</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-11-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>마케팅원론</b>
+        <div class="task-text">5~7강 최종회독</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-11-1">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">제출 전 최종 확인</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day deadline-day">
+                <div class="date-row"><span class="date-num">12</span></div>
+                <div class="tasks">
+    <label class="task task-exam">
+      <input type="checkbox" data-task="2026-12-12-0">
+      <div>
+        <span class="mini-badge">시험</span>
+        <b>문제해결을 위한 글쓰기</b>
+        <div class="task-text">★ 시험</div>
+      </div>
+    </label>
+    <label class="task task-exam">
+      <input type="checkbox" data-task="2026-12-12-1">
+      <div>
+        <span class="mini-badge">시험</span>
+        <b>경영정보론</b>
+        <div class="task-text">★ 시험</div>
+      </div>
+    </label>
+    <label class="task task-exam">
+      <input type="checkbox" data-task="2026-12-12-2">
+      <div>
+        <span class="mini-badge">시험</span>
+        <b>마케팅원론</b>
+        <div class="task-text">★ 시험</div>
+      </div>
+    </label>
+    <label class="task task-assignment">
+      <input type="checkbox" data-task="2026-12-12-3">
+      <div>
+        <span class="mini-badge">과제</span>
+        <b>미래사회와 소프트웨어</b>
+        <div class="task-text">★ 기말대체과제 마감</div>
+      </div>
+    </label></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">13</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-13-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">1~5주차 총복습</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">14</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-14-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">6~10주차 총복습</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">15</span></div>
+                <div class="tasks">
+    <label class="task task-study">
+      <input type="checkbox" data-task="2026-12-15-0">
+      <div>
+        <span class="mini-badge">메인</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">11~14주차 + 전체 최종복습</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day deadline-day">
+                <div class="date-row"><span class="date-num">16</span></div>
+                <div class="tasks">
+    <label class="task task-exam">
+      <input type="checkbox" data-task="2026-12-16-0">
+      <div>
+        <span class="mini-badge">시험</span>
+        <b>미디어와 콘텐츠</b>
+        <div class="task-text">★ 시험</div>
+      </div>
+    </label></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">17</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">18</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">19</span></div>
+                <div class="tasks"></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">20</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">21</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">22</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">23</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">24</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">25</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">26</span></div>
+                <div class="tasks"></div>
+            </td></tr><tr>
+            <td class="day">
+                <div class="date-row"><span class="date-num">27</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">28</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">29</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">30</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day">
+                <div class="date-row"><span class="date-num">31</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">1</span></div>
+                <div class="tasks"></div>
+            </td>
+            <td class="day muted">
+                <div class="date-row"><span class="date-num">2</span></div>
+                <div class="tasks"></div>
+            </td></tr></tbody></table>
+      </div>
+    </section>
+
+
+<section class="section study-materials" id="study-1122">
+  <div class="section-head">
+    <h2>11/22 공부자료</h2><span class="tag school">오늘</span>
+  </div>
+  <div class="material-summary">
+    <span>📘 메인 · 조직행동론 9주차</span>
+    <span>✍️ 가볍게 · 문제해결을 위한 글쓰기 1~2주차</span>
+    <span>⏱ 권장 60~80분</span>
+  </div>
+
+  <div class="material-grid">
+    <article class="material-panel org">
+      <h3>📘 조직행동론 9주차 — 의사결정</h3>
+      <div class="source-note">첨부한 「9주차 교안(2026_2학기)」 기준 요약</div>
+
+      <details open>
+        <summary>1. 의사결정 핵심</summary>
+        <div class="detail-body">
+          <p><b>의사결정</b> = 복수의 대안 중에서 <b>최적이라고 여겨지는 대안</b>을 선택하는 과정.</p>
+          <div class="memory-box"><b>오늘 핵심:</b> 의사결정 자체보다 <b>판단 오류가 왜 생기고 어떻게 줄이는지</b>를 묶어서 기억하기.</div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>2. 의사결정 오류 6개 ⭐</summary>
+        <div class="detail-body">
+          <table class="study-table">
+            <tr><th>오류</th><th>뜻</th><th>극복</th></tr>
+            <tr><td><b>과신 오류</b></td><td>자신의 예측 능력을 지나치게 믿음</td><td>충분한 시간을 두고 현실적으로 판단</td></tr>
+            <tr><td><b>유용성 오류</b></td><td>최근·강렬해서 기억하기 쉬운 정보에 치우침</td><td>정보수집 범위 확대, 사실·근거 중심</td></tr>
+            <tr><td><b>대표성 오류</b></td><td>과거 비슷한 사례가 지금도 같은 결과를 낼 것이라 봄</td><td>현재 상황에 맞는 정보를 따로 수집</td></tr>
+            <tr><td><b>고착과 조정 오류</b></td><td>처음 받은 정보가 기준점이 되어 이후 판단을 끌고 감</td><td>제로베이스 사고</td></tr>
+            <tr><td><b>인지 오류</b></td><td>같은 내용도 제시 형태에 따라 판단이 달라짐</td><td>형태·수단·양·시점을 종합 검토</td></tr>
+            <tr><td><b>몰입의 심화</b></td><td>잘못된 결정임을 알아도 시간·노력·자원을 계속 투입</td><td>목표 세분화, 권한 분산, 장기적 비용 분석</td></tr>
+          </table>
+          <div class="memory-box"><b>암기:</b> 과 → 유 → 대 → 고 → 인 → 몰<br>“<b>과유대고인몰</b>” 순서로 6개부터 말할 수 있으면 됨.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary>3. 의사결정에 영향을 미치는 요인</summary>
+        <div class="detail-body">
+          <ul>
+            <li><b>스키마(Schema)</b>: 과거 경험으로 형성된 인지구조가 판단과 선택에 영향.</li>
+            <li><b>창의력</b>: 새로운 대안이나 기존 대안의 효과적 실행방법을 찾는 능력.</li>
+            <li><b>정보처리능력</b>: 많은 정보 중 무엇이 중요하고 즉시 처리돼야 하는지 판단하는 능력.</li>
+            <li><b>휴리스틱스</b>: 빠른 결정을 돕는 단순한 판단방식이지만 판단 오류를 낳을 수 있음.</li>
+            <li><b>집단 차원</b>: 규범, 과업의 특성, 의사결정 사안의 특성.</li>
+            <li><b>조직 차원</b>: 평가제도, 보상제도, 과거의 전례.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary>4. 제한된 합리성 & 집단의사결정</summary>
+        <div class="detail-body">
+          <p><b>사이먼의 제한된 합리성</b>: 인간은 모든 정보를 완벽히 이해·활용하기 어려워 최적화보다 <b>만족할 만한 수준</b>에서 결정하는 경우가 많음.</p>
+          <p><b>브레인스토밍</b>: 자유롭게 아이디어 제시, 제시 중 비판하지 않음.</p>
+          <p><b>명목집단법</b>: 아이디어를 먼저 무기명으로 제출하고 이후 논의·투표로 대안을 정함.</p>
+        </div>
+      </details>
+
+      <details class="quick-q">
+        <summary>✅ 30초 셀프테스트</summary>
+        <div class="detail-body">
+          <p>① 처음 본 숫자나 정보에 끌려 판단하면? → <b>고착과 조정 오류</b></p>
+          <p>② 실패한 사업에 “여기까지 쓴 돈이 아까워서” 계속 투자하면? → <b>몰입의 심화</b></p>
+          <p>③ 최근 본 강렬한 사건만 떠올려 위험을 판단하면? → <b>유용성 오류</b></p>
+        </div>
+      </details>
+    </article>
