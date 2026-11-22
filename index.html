@@ -154,8 +154,8 @@ html{scroll-behavior:smooth}
 }
 .study-materials.annotating #study-note-canvas{
   pointer-events:auto;cursor:crosshair;
-  /* iPad: Apple Pencil은 필기, 손가락은 네이티브 스크롤/확대 허용 */
-  touch-action:pan-x pan-y pinch-zoom
+  /* iPad: 필기 중 네이티브 스크롤은 막고, 두 손가락 스크롤을 JS로 처리 */
+  touch-action:none
 }
 @media(max-width:700px){
   .note-toolbar .note-hint{width:100%;margin-left:0}
@@ -1226,15 +1226,21 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   if(!section||!canvas||!toggle||!penBtn||!highlighterBtn||!eraserBtn||!clearBtn||!opacityInput||!opacityValue) return;
 
   const storageKey='danbi-study-1122-drawing-v1';
-  const prefsKey='danbi-study-1122-drawing-prefs-v2';
+  const prefsKey='danbi-study-1122-drawing-prefs-v3';
   let enabled=false;
   let tool='pen';
   let color='#e14d68';
   let highlighterOpacity=.35;
   let drawing=false;
   let activePointerId=null;
+  let lastPoint=null;
   let ctx;
   let dpr=Math.max(1,window.devicePixelRatio||1);
+
+  // Two-finger scrolling state
+  const touchPoints=new Map();
+  let lastTouchCenter=null;
+  let twoFingerMoved=false;
 
   try{
     const prefs=JSON.parse(localStorage.getItem(prefsKey)||'{}');
@@ -1245,6 +1251,13 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   function savePrefs(){
     localStorage.setItem(prefsKey,JSON.stringify({tool,color,opacity:highlighterOpacity}));
+  }
+
+  function hexToRgba(hex,alpha){
+    const raw=hex.replace('#','');
+    const n=parseInt(raw.length===3?raw.split('').map(c=>c+c).join(''):raw,16);
+    const r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+    return 'rgba('+r+','+g+','+b+','+alpha+')';
   }
 
   function setupCanvas(){
@@ -1285,6 +1298,13 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     section.classList.toggle('annotating',enabled);
     toggle.classList.toggle('active',enabled);
     toggle.textContent=enabled?'✅ 필기 끄기':'✏️ 필기 켜기';
+    if(!enabled){
+      drawing=false;
+      activePointerId=null;
+      lastPoint=null;
+      touchPoints.clear();
+      lastTouchCenter=null;
+    }
   }
 
   function setTool(next){
@@ -1303,9 +1323,10 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   function setOpacity(percent){
     highlighterOpacity=Math.min(.8,Math.max(.1,Number(percent)/100));
-    opacityInput.value=Math.round(highlighterOpacity*100);
-    opacityValue.value=Math.round(highlighterOpacity*100)+'%';
-    opacityValue.textContent=opacityValue.value;
+    const pct=Math.round(highlighterOpacity*100);
+    opacityInput.value=pct;
+    opacityValue.value=pct+'%';
+    opacityValue.textContent=pct+'%';
     savePrefs();
   }
 
@@ -1314,34 +1335,30 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     return {x:e.clientX-r.left,y:e.clientY-r.top};
   }
 
-  canvas.addEventListener('pointerdown',e=>{
-    if(!enabled) return;
+  function touchCenter(){
+    const pts=[...touchPoints.values()];
+    if(pts.length<2) return null;
+    return {
+      x:(pts[0].clientX+pts[1].clientX)/2,
+      y:(pts[0].clientY+pts[1].clientY)/2
+    };
+  }
 
-    // iPad 손가락은 필기 캔버스가 잡지 않고 브라우저 스크롤/핀치에 맡김.
-    // Apple Pencil은 pointerType='pen'으로 정상 필기.
-    if(e.pointerType==='touch') return;
-
-    drawing=true;
-    activePointerId=e.pointerId;
-    canvas.setPointerCapture?.(e.pointerId);
-    const p=point(e);
+  function drawSegment(from,to){
     ctx.beginPath();
-    ctx.moveTo(p.x,p.y);
-    e.preventDefault();
-  });
-
-  canvas.addEventListener('pointermove',e=>{
-    if(!enabled||!drawing||e.pointerId!==activePointerId) return;
-    const p=point(e);
+    ctx.moveTo(from.x,from.y);
+    ctx.lineTo(to.x,to.y);
 
     if(tool==='eraser'){
       ctx.globalCompositeOperation='destination-out';
       ctx.globalAlpha=1;
       ctx.lineWidth=30;
+      ctx.strokeStyle='rgba(0,0,0,1)';
     }else if(tool==='highlighter'){
+      // 선 전체를 매 move마다 재획하지 않고, 새 선분만 그려 투명도 누적을 막음.
       ctx.globalCompositeOperation='source-over';
-      ctx.globalAlpha=highlighterOpacity;
-      ctx.strokeStyle=color;
+      ctx.globalAlpha=1;
+      ctx.strokeStyle=hexToRgba(color,highlighterOpacity);
       ctx.lineWidth=18;
     }else{
       ctx.globalCompositeOperation='source-over';
@@ -1350,25 +1367,87 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       ctx.lineWidth=3.5;
     }
 
-    ctx.lineTo(p.x,p.y);
     ctx.stroke();
+    ctx.closePath();
+  }
+
+  canvas.addEventListener('pointerdown',e=>{
+    if(!enabled) return;
+
+    if(e.pointerType==='touch'){
+      touchPoints.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY});
+      if(touchPoints.size===2){
+        // 두 번째 손가락이 닿는 순간 혹시 진행 중이던 획은 종료.
+        if(drawing){
+          drawing=false;
+          activePointerId=null;
+          lastPoint=null;
+          save();
+        }
+        lastTouchCenter=touchCenter();
+        twoFingerMoved=false;
+      }
+      e.preventDefault();
+      return;
+    }
+
+    // Apple Pencil / 마우스는 필기
+    drawing=true;
+    activePointerId=e.pointerId;
+    canvas.setPointerCapture?.(e.pointerId);
+    lastPoint=point(e);
     e.preventDefault();
-  });
+  },{passive:false});
+
+  canvas.addEventListener('pointermove',e=>{
+    if(!enabled) return;
+
+    if(e.pointerType==='touch'){
+      if(!touchPoints.has(e.pointerId)) return;
+      touchPoints.set(e.pointerId,{clientX:e.clientX,clientY:e.clientY});
+
+      if(touchPoints.size>=2){
+        const center=touchCenter();
+        if(center&&lastTouchCenter){
+          const dx=center.x-lastTouchCenter.x;
+          const dy=center.y-lastTouchCenter.y;
+          if(Math.abs(dx)>1||Math.abs(dy)>1) twoFingerMoved=true;
+          window.scrollBy(-dx,-dy);
+        }
+        lastTouchCenter=center;
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if(!drawing||e.pointerId!==activePointerId||!lastPoint) return;
+    const p=point(e);
+    drawSegment(lastPoint,p);
+    lastPoint=p;
+    e.preventDefault();
+  },{passive:false});
 
   function stop(e){
+    if(e.pointerType==='touch'){
+      touchPoints.delete(e.pointerId);
+      if(touchPoints.size<2) lastTouchCenter=null;
+      e.preventDefault();
+      return;
+    }
+
     if(!drawing) return;
     if(e?.pointerId!=null && activePointerId!==null && e.pointerId!==activePointerId) return;
     drawing=false;
-    ctx.closePath();
     ctx.globalCompositeOperation='source-over';
     ctx.globalAlpha=1;
     save();
     if(e?.pointerId!=null && canvas.hasPointerCapture?.(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     activePointerId=null;
+    lastPoint=null;
   }
 
-  canvas.addEventListener('pointerup',stop);
-  canvas.addEventListener('pointercancel',stop);
+  canvas.addEventListener('pointerup',stop,{passive:false});
+  canvas.addEventListener('pointercancel',stop,{passive:false});
   canvas.addEventListener('pointerleave',e=>{
     if(drawing && e.pointerType!=='pen') stop(e);
   });
@@ -1385,6 +1464,27 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);
     localStorage.removeItem(storageKey);
   });
+
+  // 한 손가락 더블탭 = 브라우저 뒤로가기.
+  let lastTapTime=0;
+  let lastTapX=0;
+  let lastTapY=0;
+  document.addEventListener('pointerup',e=>{
+    if(e.pointerType!=='touch') return;
+    if(twoFingerMoved){ twoFingerMoved=false; return; }
+    if(e.target.closest('button,input,label,a,summary,select,textarea')) return;
+
+    const now=Date.now();
+    const close=Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<42;
+    if(now-lastTapTime<320 && close){
+      lastTapTime=0;
+      if(history.length>1) history.back();
+      return;
+    }
+    lastTapTime=now;
+    lastTapX=e.clientX;
+    lastTapY=e.clientY;
+  },true);
 
   let resizeTimer;
   window.addEventListener('resize',()=>{
