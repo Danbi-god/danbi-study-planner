@@ -1028,7 +1028,7 @@ html{scroll-behavior:smooth}
     </label>
 
     <button type="button" id="note-clear">🗑 전체 지우기</button>
-    <span class="note-hint">iPad: Apple Pencil로 필기 · 손가락으로 스크롤/확대 · 새로고침해도 저장됨</span>
+    <span class="note-hint">iPad: Apple Pencil로 필기 · 펜촉 빠른 두 번 탭 = 펜/지우개 전환 · 새로고침해도 저장됨</span>
   </div>
   <canvas id="study-note-canvas" aria-label="11월 22일 공부자료 필기 캔버스"></canvas>
 
@@ -1243,6 +1243,10 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   let activePointerId=null;
   let lastPoint=null;
   let lastMidPoint=null;
+  let penStartPoint=null;
+  let penStartTime=0;
+  let penMoved=false;
+  let lastPenTap=null;
   let ctx;
   let dpr=Math.max(1,window.devicePixelRatio||1);
 
@@ -1314,6 +1318,10 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
       activePointerId=null;
       lastPoint=null;
       lastMidPoint=null;
+      penStartPoint=null;
+      penStartTime=0;
+      penMoved=false;
+      lastPenTap=null;
       fingerGesture=null;
     }
   }
@@ -1324,6 +1332,16 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     highlighterBtn.classList.toggle('active',tool==='highlighter');
     eraserBtn.classList.toggle('active',tool==='eraser');
     savePrefs();
+  }
+
+  function togglePenEraser(){
+    setTool(tool==='eraser' ? 'pen' : 'eraser');
+    const label=tool==='eraser' ? '🧽 지우개' : '🖊 펜';
+    toggle.textContent='전환됨 · '+label;
+    clearTimeout(togglePenEraser._timer);
+    togglePenEraser._timer=setTimeout(()=>{
+      toggle.textContent=enabled?'✅ 필기 끄기':'✏️ 필기 켜기';
+    },650);
   }
 
   function setColor(next){
@@ -1420,6 +1438,9 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     activePointerId=e.pointerId;
     lastPoint=pointFromEvent(e);
     lastMidPoint=lastPoint;
+    penStartPoint=lastPoint;
+    penStartTime=Date.now();
+    penMoved=false;
     try{ section.setPointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
     e.stopPropagation();
@@ -1429,7 +1450,11 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     if(!enabled || !drawing || e.pointerType!=='pen' || e.pointerId!==activePointerId || !lastPoint) return;
     const points=(typeof e.getCoalescedEvents==='function' ? e.getCoalescedEvents() : [e]);
     for(const evt of points){
-      drawSmoothPoint(pointFromEvent(evt));
+      const p=pointFromEvent(evt);
+      if(!penMoved && penStartPoint && Math.hypot(p.x-penStartPoint.x,p.y-penStartPoint.y)>3){
+        penMoved=true;
+      }
+      if(penMoved) drawSmoothPoint(p);
     }
     e.preventDefault();
     e.stopPropagation();
@@ -1437,14 +1462,40 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
 
   function stopPen(e){
     if(!drawing || e.pointerId!==activePointerId) return;
-    finishSmoothStroke();
+
+    const endPoint=pointFromEvent(e);
+    const now=Date.now();
+    const isPenTap=
+      !penMoved &&
+      penStartPoint &&
+      now-penStartTime<=280 &&
+      Math.hypot(endPoint.x-penStartPoint.x,endPoint.y-penStartPoint.y)<=8;
+
+    if(penMoved){
+      finishSmoothStroke();
+      save();
+    }else if(isPenTap){
+      const tap={x:endPoint.x,y:endPoint.y,time:now};
+      if(lastPenTap &&
+         now-lastPenTap.time<=380 &&
+         Math.hypot(tap.x-lastPenTap.x,tap.y-lastPenTap.y)<=42){
+        lastPenTap=null;
+        togglePenEraser();
+      }else{
+        lastPenTap=tap;
+      }
+    }
+
     drawing=false;
     activePointerId=null;
     lastPoint=null;
     lastMidPoint=null;
+    penStartPoint=null;
+    penStartTime=0;
+    penMoved=false;
     ctx.globalCompositeOperation='source-over';
     ctx.globalAlpha=1;
-    save();
+
     try{ if(section.hasPointerCapture(e.pointerId)) section.releasePointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
     e.stopPropagation();
