@@ -1495,13 +1495,38 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
   // Apple Pencil only: preventDefault here blocks Safari page movement while writing.
   section.addEventListener('pointerdown',e=>{
     if(!enabled || e.pointerType!=='pen' || isToolbarTarget(e.target)) return;
+
+    const downPoint=pointFromEvent(e);
+    const now=Date.now();
+
+    // Safari/iPad can occasionally miss or delay Pencil pointerup events.
+    // Detect the second tap immediately on pointerdown for a more reliable
+    // pen <-> eraser toggle.
+    if(lastPenTap &&
+       now-lastPenTap.time<=550 &&
+       Math.hypot(downPoint.x-lastPenTap.x,downPoint.y-lastPenTap.y)<=60){
+      lastPenTap=null;
+      drawing=false;
+      activePointerId=null;
+      lastPoint=null;
+      lastMidPoint=null;
+      penStartPoint=null;
+      penStartTime=0;
+      penMoved=false;
+      clearHighlighterLayer();
+      togglePenEraser();
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
     drawing=true;
     activePointerId=e.pointerId;
     if(tool==='highlighter') clearHighlighterLayer();
-    lastPoint=pointFromEvent(e);
+    lastPoint=downPoint;
     lastMidPoint=lastPoint;
     penStartPoint=lastPoint;
-    penStartTime=Date.now();
+    penStartTime=now;
     penMoved=false;
     try{ section.setPointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
@@ -1540,8 +1565,8 @@ cb.addEventListener('change',()=>{saved[cb.dataset.task]=cb.checked;localStorage
     }else if(isPenTap){
       const tap={x:endPoint.x,y:endPoint.y,time:now};
       if(lastPenTap &&
-         now-lastPenTap.time<=380 &&
-         Math.hypot(tap.x-lastPenTap.x,tap.y-lastPenTap.y)<=42){
+         now-lastPenTap.time<=550 &&
+         Math.hypot(tap.x-lastPenTap.x,tap.y-lastPenTap.y)<=60){
         lastPenTap=null;
         togglePenEraser();
       }else{
